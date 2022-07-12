@@ -6,7 +6,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -41,10 +40,10 @@ public class ReactiveExample {
     }
 
     //TODO: mayor puntaje de estudiante
-    public Mono<Estudiante> mayorPuntajeDeEstudiante(int limit) {
+    public Flux<Estudiante> mayorPuntajeDeEstudiante(int limit) {
         return estudianteList
                 .sort(Comparator.comparing(Estudiante::getPuntaje).reversed())
-                .next();
+                .take(limit);
     }
 
     //TODO: total de asisntencias de estudiantes con mayor puntaje basado en un  valor
@@ -58,10 +57,12 @@ public class ReactiveExample {
 
     //TODO: el estudiante tiene asistencias correctas
     public Mono<Boolean> elEstudianteTieneAsistenciasCorrectas(Estudiante estudiante) {
-        return estudianteList
-                .filter(estudianteList -> estudianteList.getNombre().equals(estudiante.getNombre()))
-                .next()
-                .zipWith(Mono.just(estudiante), (est1, est2) -> est1.getAsistencias().equals(est2.getAsistencias()));
+        return Mono.just(estudiante)
+                .filter(estudiante1 -> estudiante1.getAsistencias()
+                        .stream()
+                        .reduce(0, Integer::sum) >= VALOR_PERMITIDO)
+                .map(estudiante1 -> true)
+                .switchIfEmpty(Mono.just(false));
     }
 
     //TODO: promedio de puntajes por estudiantes
